@@ -1,5 +1,6 @@
 require("dotenv").config()
 const http = require("http")
+const errorHandle = require("./errorrHandle")
 const AppDataSource = require("./db")
 
 function isUndefined (value) {
@@ -43,12 +44,7 @@ const requestListener = async (req, res) => {
       }))
       res.end()
     } catch (error) {
-      res.writeHead(500, headers)
-      res.write(JSON.stringify({
-        status: "error",
-        message: "伺服器錯誤"
-      }))
-      res.end()
+      errorHandle(res)
     }
   } else if (req.url === "/api/credit-package" && req.method === "POST") {
     req.on("end", async () => {
@@ -94,12 +90,7 @@ const requestListener = async (req, res) => {
         res.end()
       } catch (error) {
         console.error(error)
-        res.writeHead(500, headers)
-        res.write(JSON.stringify({
-          status: "error",
-          message: "伺服器錯誤"
-        }))
-        res.end()
+        errorHandle(res)
       }
     })
   } else if (req.url === "/api/credit-package" && req.method === "DELETE") {
@@ -148,12 +139,7 @@ const requestListener = async (req, res) => {
       res.end()
     } catch (error) {
       console.error(error)
-      res.writeHead(500, headers)
-      res.write(JSON.stringify({
-        status: "error",
-        message: "伺服器錯誤"
-      }))
-      res.end()
+      errorHandle(res)
     }
   } else if (req.url === "/api/coaches/skill" && req.method === "GET") {
     try {
@@ -167,12 +153,7 @@ const requestListener = async (req, res) => {
       }))
       res.end()
     } catch (error) {
-      res.writeHead(500, headers)
-      res.write(JSON.stringify({
-        status: "error",
-        message: "伺服器錯誤"
-      }))
-      res.end()
+      errorHandle(res)
     }
   } else if (req.url === "/api/coaches/skill" && req.method === "POST") {
     req.on('end', async () => {
@@ -219,12 +200,7 @@ const requestListener = async (req, res) => {
           }))
           res.end()
         } catch(error) {
-          res.writeHead(500, headers)
-          res.write(JSON.stringify({
-            status: "error",
-            message: "伺服器錯誤"
-          }))
-          res.end()
+          errorHandle(res)
         }
     })
   } else if (req.url === "/api/coaches/skill" && req.method === "DELETE") {
