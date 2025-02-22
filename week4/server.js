@@ -113,7 +113,7 @@ const requestListener = async (req, res) => {
   } else if (req.url.startsWith("/api/credit-package/") && req.method === "DELETE") {
     try {
       const packageId = req.url.split("/").pop()
-      if (isUndefined(packageId) || isNotValidSting(packageId)) {
+      if (isUndefined(packageId) || isNotValidSting(packageId) || isNotValidUUID(packageId)) {
         res.writeHead(400, headers)
         res.write(JSON.stringify({
           status: "failed",
@@ -163,7 +163,7 @@ const requestListener = async (req, res) => {
             res.writeHead(400, headers)
             res.write(JSON.stringify({
               status: "error",
-              meaasge: "伺服器錯誤"
+              message: "伺服器錯誤"
             }));
             res.end();
             return
@@ -180,7 +180,7 @@ const requestListener = async (req, res) => {
           if(existSkill.length > 0){
             res.writeHead(409, headers)
             res.write(JSON.stringify({
-              status: "error",
+              status: "failed",
               message: "資料重複"
             }))
             res.end()
@@ -209,7 +209,7 @@ const requestListener = async (req, res) => {
         res.writeHead(400, headers)
         res.write(JSON.stringify({
           status: "failed",
-          message: "無資料刪除"
+          message: "欄位未填寫正確"
         }))
         res.end();
         return
