@@ -1,16 +1,23 @@
 const express = require('express')
 
 const router = express.Router()
+const config = require('../config/index')
 const { dataSource } = require('../db/data-source')
 const logger = require('../utils/logger')('Admin')
 const { isUndefined, isNotValidString, isNotValidUUID, isNotValidInteger, isValidPassword } = require('../utils/validUtils')
+const auth = require('../middlewares/auth')({
+    secret: config.get('secret').jwtSecret,
+    userRepository: dataSource.getRepository('User'),
+    logger
+})
 
-router.post('/coaches/courses', async (req, res, next) => {
+const isCoach = require('../middlewares/isCoach')
+
+router.post('/coaches/courses', auth, isCoach, async (req, res, next) => {
     try {
-        
-        const { user_id, skill_id, name, description, start_at, end_at, max_participants, meeting_url } = req.body
+        const { id } = req.user
+        const { skill_id, name, description, start_at, end_at, max_participants, meeting_url } = req.body
         if(
-            isNotValidString(user_id) || 
             isNotValidString(skill_id) || 
             isNotValidString(name) || 
             isNotValidString(description) || 
@@ -27,30 +34,9 @@ router.post('/coaches/courses', async (req, res, next) => {
             return
         }
 
-        const userRepo = await dataSource.getRepository('User')
-        const existUser = await userRepo.findOne({
-            where: {
-                id: user_id
-            }
-        })
-
-        if (!existUser) {
-            res.status(400).json({
-                status : "failed",
-                message: "使用者不存在"
-            })
-            return
-        } else if (existUser.role !== 'COACH' ) {
-            res.status(400).json({
-                status : "failed",
-                message: "使用者尚未成為教練"
-            })
-            return
-        }
-
-        const courseRepo = await dataSource.getRepository('Course')
+        const courseRepo = dataSource.getRepository('Course')
         const newCourse = await courseRepo.create({
-            user_id, 
+            user_id: id, 
             skill_id, 
             name, 
             description, 
@@ -74,12 +60,12 @@ router.post('/coaches/courses', async (req, res, next) => {
     }
 })
 
-router.put('/coaches/courses/:courseId', async (req, res, next) => {
+router.put('/coaches/courses/:courseId', auth, isCoach, async (req, res, next) => {
     try {
+        const { id } = req.user
         const { courseId } = req.params
-        const { user_id, skill_id, name, description, start_at, end_at, max_participants, meeting_url } = req.body
+        const { skill_id, name, description, start_at, end_at, max_participants, meeting_url } = req.body
         if(
-            isNotValidString(user_id) || 
             isNotValidString(skill_id) || 
             isNotValidString(name) || 
             isNotValidString(description) || 
@@ -96,10 +82,11 @@ router.put('/coaches/courses/:courseId', async (req, res, next) => {
             return
         }
 
-        const courseRepo = await dataSource.getRepository('Course')
+        const courseRepo = dataSource.getRepository('Course')
         const existCourse = await courseRepo.findOne({
             where: {
-                id: courseId
+                id: courseId,
+                user_id: id
             }
         })
 
@@ -173,7 +160,7 @@ router.post('/coaches/:userId', async (req, res, next) => {
         }
 
         // 重複資料
-        const userRepo = await dataSource.getRepository('User')
+        const userRepo = dataSource.getRepository('User')
         const existUser = await userRepo.findOne({
             where: {
                 id: userId
@@ -211,7 +198,7 @@ router.post('/coaches/:userId', async (req, res, next) => {
         }
 
         // 使用者新增到教練資料表
-        const coachRepo = await dataSource.getRepository('Coach')
+        const coachRepo = dataSource.getRepository('Coach')
         const newCoach = await coachRepo.create({
             user_id: userId,
             experience_years, 
@@ -219,7 +206,7 @@ router.post('/coaches/:userId', async (req, res, next) => {
             profile_image_url
         })
 
-        const coachResult = await coachRepo.save(newCoach)
+        const coachResult = coachRepo.save(newCoach)
         const userResult = await userRepo.findOne({
             where: {
                 id: userId

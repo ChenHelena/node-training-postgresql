@@ -3,13 +3,15 @@ const dotenv = require('dotenv')
 const result = dotenv.config()
 const db = require('./db')
 const web = require('./web')
+const secret = require('./secret')
 
 if (result.error) {
   throw result.error
 }
 const config = {
   db,
-  web
+  web,
+  secret
 }
 
 class ConfigManager {
@@ -22,6 +24,7 @@ class ConfigManager {
    * @throws Will throw an error if the configuration path is not found.
    */
 
+  // 根據路徑查找配置
   static get (path) {
     if (!path || typeof path !== 'string') {
       throw new Error(`incorrect path: ${path}`)
